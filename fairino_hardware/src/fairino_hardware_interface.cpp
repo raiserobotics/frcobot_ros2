@@ -162,18 +162,62 @@ hardware_interface::CallbackReturn FairinoHardwareInterface::on_activate(
                 _jnt_position_command[5]);
     RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
                 "机械臂硬件启动成功!");
-    return hardware_interface::CallbackReturn::SUCCESS;
   } else {
     RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
                 "读取初始关节角度错误，硬件无法启动！请检查通讯内容");
     return hardware_interface::CallbackReturn::ERROR;
   }
+
+  // Start freedrive service node
+  _freedrive_node = std::make_shared<rclcpp::Node>(info_.name + "_freedrive");
+  _start_freedrive_srv = _freedrive_node->create_service<std_srvs::srv::Trigger>(
+      "start_freedrive",
+      [this](const std_srvs::srv::Trigger::Request::SharedPtr,
+             std_srvs::srv::Trigger::Response::SharedPtr resp) {
+        _enable_freedrive.store(true);
+        resp->success = true;
+        resp->message = "Freedrive enable requested";
+      });
+  _stop_freedrive_srv = _freedrive_node->create_service<std_srvs::srv::Trigger>(
+      "stop_freedrive",
+      [this](const std_srvs::srv::Trigger::Request::SharedPtr,
+             std_srvs::srv::Trigger::Response::SharedPtr resp) {
+        _disable_freedrive.store(true);
+        resp->success = true;
+        resp->message = "Freedrive disable requested";
+      });
+  _freedrive_executor =
+      std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  _freedrive_executor->add_node(_freedrive_node);
+  _freedrive_executor_thread =
+      std::thread([this]() { _freedrive_executor->spin(); });
+
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn FairinoHardwareInterface::on_deactivate(
     const rclcpp_lifecycle::State &previous_state) {
   RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
               "Stopping ...please wait...");
+
+  if (_freedrive_executor) {
+    _freedrive_executor->cancel();
+  }
+  if (_freedrive_executor_thread.joinable()) {
+    _freedrive_executor_thread.join();
+  }
+  _start_freedrive_srv.reset();
+  _stop_freedrive_srv.reset();
+  _freedrive_node.reset();
+  _freedrive_executor.reset();
+
+  // If we were in freedrive, exit drag mode before stopping
+  if (_in_freedrive.load()) {
+    _ptr_robot->DragTeachSwitch(0);
+    _ptr_robot->Mode(0);
+    _in_freedrive = false;
+  }
+
   _ptr_robot->StopMotion(); // 停止机器人
   _ptr_robot->CloseRPC();   // 销毁实例，连接断开
   _ptr_robot.release();
@@ -186,6 +230,44 @@ hardware_interface::return_type FairinoHardwareInterface::read(
     const rclcpp::Time &time,
     const rclcpp::Duration
         &period) { // 从RTDE反馈数据中获取所需的位置，速度和扭矩信息
+
+  if (_enable_freedrive.exchange(false)) {
+    errno_t mode_err = _ptr_robot->Mode(1);
+    errno_t drag_err = _ptr_robot->DragTeachSwitch(1);
+    if (mode_err == 0 && drag_err == 0) {
+      _in_freedrive = true;
+      RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
+                  "Freedrive enabled");
+    } else {
+      RCLCPP_WARN(rclcpp::get_logger("FairinoHardwareInterface"),
+                  "Failed to enable freedrive: Mode=%d DragTeach=%d", mode_err,
+                  drag_err);
+      // Rollback: if Mode(1) succeeded but DragTeachSwitch failed, return to
+      // auto mode so ServoJ commands continue working
+      if (mode_err == 0) {
+        _ptr_robot->Mode(0);
+      }
+    }
+  } else if (_disable_freedrive.exchange(false)) {
+    errno_t drag_err = _ptr_robot->DragTeachSwitch(0);
+    errno_t mode_err = _ptr_robot->Mode(0);
+    errno_t servo_err = _ptr_robot->ServoMoveStart();
+    _in_freedrive = false;
+    if (mode_err == 0 && drag_err == 0) {
+      RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
+                  "Freedrive disabled");
+    } else {
+      RCLCPP_WARN(rclcpp::get_logger("FairinoHardwareInterface"),
+                  "Failed to disable freedrive: DragTeach=%d Mode=%d", drag_err,
+                  mode_err);
+    }
+    if (servo_err != 0) {
+      RCLCPP_WARN(rclcpp::get_logger("FairinoHardwareInterface"),
+                  "ServoMoveStart failed after disabling freedrive: %d",
+                  servo_err);
+    }
+  }
+
   JointPos state_data;
   error_t returncode = _ptr_robot->GetActualJointPosDegree(1, &state_data);
   if (returncode == 0) {
@@ -206,6 +288,9 @@ hardware_interface::return_type FairinoHardwareInterface::read(
 hardware_interface::return_type
 FairinoHardwareInterface::write(const rclcpp::Time &time,
                                 const rclcpp::Duration &period) {
+  if (_in_freedrive) {
+    return hardware_interface::return_type::OK;
+  }
   if (_control_mode == 0) { // 位置控制模式
     if (std::any_of(&_jnt_position_command[0], &_jnt_position_command[5],
                     [](double c) { return not std::isfinite(c); })) {

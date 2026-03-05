@@ -3,12 +3,16 @@
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "libfairino/include/robot.h"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_srvs/srv/trigger.hpp"
 #include "visibility_control.h"
+#include <atomic>
 #include <hardware_interface/hardware_info.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
+#include <thread>
 #include <vector>
 
 namespace fairino_hardware {
@@ -65,6 +69,16 @@ private:
   double _jnt_torque_state[6];
   int _control_mode;
   std::unique_ptr<FRRobot> _ptr_robot;
+
+  // Freedrive support
+  std::atomic<bool> _enable_freedrive{false};
+  std::atomic<bool> _disable_freedrive{false};
+  std::atomic<bool> _in_freedrive{false};
+  rclcpp::Node::SharedPtr _freedrive_node;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr _start_freedrive_srv;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr _stop_freedrive_srv;
+  rclcpp::executors::SingleThreadedExecutor::SharedPtr _freedrive_executor;
+  std::thread _freedrive_executor_thread;
 };
 
 } // namespace fairino_hardware
