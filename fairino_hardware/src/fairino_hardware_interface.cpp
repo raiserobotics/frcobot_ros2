@@ -134,6 +134,9 @@ hardware_interface::CallbackReturn FairinoHardwareInterface::on_activate(
     _jnt_torque_state[i] = 0;
   }
   _control_mode = 0; // 默认是位置控制,0-位置控制，1-扭矩控制 2-速度控制
+  _enable_freedrive = false;
+  _disable_freedrive = false;
+  _in_freedrive = false;
   errno_t returncode = _ptr_robot->RPC(info_.hardware_parameters.at("can_interface").c_str()); // 建立xmlrpc连接
   rclcpp::sleep_for(200ms); // 等待一段时间让控制器的rpc连接建立完毕
   if (returncode != 0) {
