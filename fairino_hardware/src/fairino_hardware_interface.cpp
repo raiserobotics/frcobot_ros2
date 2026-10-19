@@ -5,6 +5,9 @@
 
 namespace fairino_hardware {
 
+// ServoJ command period (s); must equal the controller_manager update_rate (100 Hz) so each command gets one full cycle.
+constexpr float kServoJCmdPeriod = 0.010f;
+
 hardware_interface::CallbackReturn FairinoHardwareInterface::on_init(
     const hardware_interface::HardwareInfo &sysinfo) {
   if (hardware_interface::SystemInterface::on_init(sysinfo) !=
@@ -312,7 +315,7 @@ FairinoHardwareInterface::write(const rclcpp::Time &time,
     for (auto j = 0; j < 6; j++) {
       cmd.jPos[j] = _jnt_position_command[j] / M_PI * 180.0;
     }
-    int returncode = _ptr_robot->ServoJ(&cmd, &extcmd, 0, 0, 0.008, 0, 0);
+    int returncode = _ptr_robot->ServoJ(&cmd, &extcmd, 0, 0, kServoJCmdPeriod, 0, 0);
     if (returncode != 0) {
       RCLCPP_INFO(rclcpp::get_logger("FairinoHardwareInterface"),
                   "ServoJ指令下发错误,错误码:%d", returncode);
