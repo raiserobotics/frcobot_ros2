@@ -97,10 +97,10 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-3.0543"
-      upper="3.0543"
+      lower="-3.1241"
+      upper="3.1241"
       effort="1000"
-      velocity="3.15" />
+      velocity="2.0944" />
     <calibration
       rising="0"
       falling="0" />
@@ -108,8 +108,8 @@
       damping="100"
       friction="0" />
     <safety_controller
-      soft_upper_limit="3.0194"
-      soft_lower_limit="-3.0194"
+      soft_upper_limit="3.0543"
+      soft_lower_limit="-3.0543"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
@@ -166,10 +166,10 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-4.6251"
-      upper="1.4835"
+      lower="-4.6949"
+      upper="1.5533"
       effort="1000"
-      velocity="3.15" />
+      velocity="2.0944" />
     <calibration
       rising="0"
       falling="0" />
@@ -177,8 +177,8 @@
       damping="100"
       friction="0" />
     <safety_controller
-      soft_upper_limit="1.4486"
-      soft_lower_limit="-4.5902"
+      soft_upper_limit="1.4835"
+      soft_lower_limit="-4.6251"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
@@ -238,7 +238,7 @@
       lower="-2.8274"
       upper="2.8274"
       effort="1000"
-      velocity="3.15" />
+      velocity="2.0944" />
     <calibration
       rising="0"
       falling="0" />
@@ -304,10 +304,10 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-4.6251"
-      upper="1.4835"
+      lower="-4.6949"
+      upper="1.5533"
       effort="500"
-      velocity="3.2" />
+      velocity="3.1416" />
     <calibration
       rising="0"
       falling="0" />
@@ -315,8 +315,8 @@
       damping="30"
       friction="0" />
     <safety_controller
-      soft_upper_limit="1.4486"
-      soft_lower_limit="-4.5902"
+      soft_upper_limit="1.4835"
+      soft_lower_limit="-4.6251"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
@@ -373,10 +373,10 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-3.0543"
-      upper="3.0543"
+      lower="-3.1241"
+      upper="3.1241"
       effort="500"
-      velocity="3.2" />
+      velocity="3.1416" />
     <calibration
       rising="0"
       falling="0" />
@@ -384,8 +384,8 @@
       damping="30"
       friction="0" />
     <safety_controller
-      soft_upper_limit="3.0194"
-      soft_lower_limit="-3.0194"
+      soft_upper_limit="3.0543"
+      soft_lower_limit="-3.0543"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
@@ -442,10 +442,10 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-3.0543"
-      upper="3.0543"
+      lower="-3.1241"
+      upper="3.1241"
       effort="500"
-      velocity="3.2" />
+      velocity="3.1416" />
     <calibration
       rising="0"
       falling="0" />
@@ -453,8 +453,8 @@
       damping="30"
       friction="0" />
     <safety_controller
-      soft_upper_limit="3.0194"
-      soft_lower_limit="-3.0194"
+      soft_upper_limit="3.0543"
+      soft_lower_limit="-3.0543"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
