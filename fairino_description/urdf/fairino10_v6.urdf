@@ -235,8 +235,8 @@
     <axis
       xyz="0 0 1" />
     <limit
-      lower="-2.7925"
-      upper="2.7925"
+      lower="-2.8274"
+      upper="2.8274"
       effort="150"
       velocity="3.15" />
     <calibration
@@ -246,8 +246,8 @@
       damping="0"
       friction="0" />
     <safety_controller
-      soft_upper_limit="2.7576"
-      soft_lower_limit="-2.7576"
+      soft_upper_limit="2.7925"
+      soft_lower_limit="-2.7925"
       k_position="100.0"
       k_velocity="40.0" />
   </joint>
